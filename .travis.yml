@@ -30,7 +30,6 @@ install:
   - source activate test_env
   - pip install .
   - conda list
-  - conda install scipy=1.4
 
 script:
   - pytest --pyargs openest
