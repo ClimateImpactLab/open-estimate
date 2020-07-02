@@ -4,13 +4,8 @@ os:
 language: python
 notifications:
   email: false
-
-matrix:
-  fast_finish: true
-  include:
-    - python: 3.8
-      env:
-        - CONDA_ENV=py37
+env:
+  - CONDA_ENV=py37
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh; fi
