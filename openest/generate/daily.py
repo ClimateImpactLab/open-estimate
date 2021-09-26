@@ -60,7 +60,7 @@ class MonthlyDayBins(Calculation):
             checks.assert_conformant_weather_input(curve, temps2)
 
             results = curve(temps2)
-            result = np.nansum(results) / 12
+            result = bn.nansum(results) / 12
 
             if not np.isnan(result):
                 yield year, result
@@ -113,7 +113,7 @@ class YearlyDayBins(Calculation):
                 else:
                     raise RuntimeError("Unknown format for temps: " + str(temps2.shape[0]) + " x " + str(temps2.shape[1]) + " <> len " + str(xx))
             else:
-                result = np.nansum(curve(temps2))
+                result = bn.nansum(curve(temps2))
 
             if not np.isnan(result):
                 yield year, result
@@ -252,11 +252,11 @@ class YearlyAverageDay(Calculation):
                 if isinstance(temps2, xr.Dataset):
                     for var in temps2._variables:
                         if var not in ['time', 'year']:
-                            diagnostic.record(region, year, var, float(np.nansum(temps2._variables[var].values)) / len(temps2._variables[var].values))
-                    diagnostic.record(region, year, 'zero', float(np.nansum(curve(temps2) == 0)) / len(temps2.variables))
+                            diagnostic.record(region, year, var, float(bn.nansum(temps2._variables[var].values)) / len(temps2._variables[var].values))
+                    diagnostic.record(region, year, 'zero', float(bn.nansum(curve(temps2) == 0)) / len(temps2.variables))
                 else:
-                    diagnostic.record(region, year, 'avgv', float(np.nansum(temps2)) / len(temps2))
-                    diagnostic.record(region, year, 'zero', float(np.nansum(curve(temps2) == 0)) / len(temps2))
+                    diagnostic.record(region, year, 'avgv', float(bn.nansum(temps2)) / len(temps2))
+                    diagnostic.record(region, year, 'zero', float(bn.nansum(curve(temps2) == 0)) / len(temps2))
 
             if not np.isnan(result):
                 yield year, result
@@ -306,15 +306,15 @@ class YearlySumDay(YearlyAverageDay):
                 return
             
             curve = self.curvegen.get_curve(region, year, *args, weather=temps) # Passing in original (not weather-changed) data
-            result = np.nansum(curve(temps2))
+            result = bn.nansum(curve(temps2))
 
             if not self.norecord and diagnostic.is_recording():
                 if isinstance(temps2, xr.Dataset):
                     for var in temps2._variables:
                         if var not in ['time', 'year']:
-                            diagnostic.record(region, year, var, float(np.nansum(temps2._variables[var])))
+                            diagnostic.record(region, year, var, float(bn.nansum(temps2._variables[var])))
                 else:
-                    diagnostic.record(region, year, 'avgv', float(np.nansum(temps2)))
+                    diagnostic.record(region, year, 'avgv', float(bn.nansum(temps2)))
 
             if not np.isnan(result):
                 yield year, result
@@ -349,7 +349,7 @@ class YearlyDividedPolynomialAverageDay(Calculation):
 
             assert temps.shape[1] == len(curve.curr_curve.ccs), "%d <> %d" % (temps.shape[1], len(curve.curr_curve.ccs))
 
-            #result = np.nansum(np.dot(temps, curve.curr_curve.ccs)) / len(temps)
+            #result = bn.nansum(np.dot(temps, curve.curr_curve.ccs)) / len(temps)
             result = np.dot(np.sum(temps, axis=0), curve.curr_curve.ccs) / len(temps)
 
             if diagnostic.is_recording():

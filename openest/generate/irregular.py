@@ -5,6 +5,12 @@ from . import formatting, arguments, diagnostic
 from .formatting import FormatElement
 from .curvegen import CurveGenerator
 
+try:
+    import bottleneck as bn
+except ImportError:
+    # Use numpy instead...
+    bn = np
+
 class YearlySumIrregular(Calculation):
     def __init__(self, units, curvegen, curve_description):
         super(YearlySumIrregular, self).__init__([units])
@@ -40,14 +46,14 @@ class YearlySumIrregular(Calculation):
 
             curve = self.curvegen.get_curve(region, year, *args, weather=weather) # Passing in original (not weather-changed) data
 
-            result = np.nansum(curve(weather))
+            result = bn.nansum(curve(weather))
 
             if isinstance(weather, xr.Dataset):
                 for var in weather._variables:
                     if var not in ['time', 'year'] and var not in weather.coords:
-                        diagnostic.record(region, year, var, float(np.nansum(weather._variables[var]._data)))
+                        diagnostic.record(region, year, var, float(bn.nansum(weather._variables[var]._data)))
             else:
-                diagnostic.record(region, year, 'avgv', float(np.nansum(weather)))
+                diagnostic.record(region, year, 'avgv', float(bn.nansum(weather)))
                         
             if not np.isnan(result):
                 yield year, result
