@@ -469,4 +469,8 @@ class MinimumCurve(curve_module.MinimumCurve, SmartCurve):
     def univariate(self):
         return curve_module.MinimumCurve(self.curve1.univariate, self.curve2.univariate)
 
+class MaximumCurve(curve_module.MaximumCurve, SmartCurve):
+    @property
+    def univariate(self):
+        return curve_module.MaximumCurve(self.curve1.univariate, self.curve2.univariate)
 
