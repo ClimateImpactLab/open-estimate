@@ -59,7 +59,6 @@ class ConstantCurveGenerator(CurveGenerator):
     
 class TransformCurveGenerator(CurveGenerator):
     """
-
     Parameters
     ----------
     transform : callable
@@ -68,13 +67,14 @@ class TransformCurveGenerator(CurveGenerator):
     description : str
     curvegens : Sequence of CurveGenerator-like objects
     """
-    def __init__(self, transform, description, *curvegens):
+    def __init__(self, transform, description, *curvegens, partial_derivatve_transform=None):
         super(TransformCurveGenerator, self).__init__(curvegens[0].indepunits, curvegens[0].depenunit)
         assert description is not None, "Please provide a description."
         self.curvegens = curvegens
         self.description = description
         self.transform = transform
         self.deltamethod_passthrough = False
+        self.partial_derivative_transform = partial_derivatve_transform
 
     def get_curve(self, region, year, *args, **kw):
         """
@@ -154,9 +154,13 @@ class TransformCurveGenerator(CurveGenerator):
         """
         if self.deltamethod_passthrough:
             return self.curvegens[0].get_partial_derivative_curvegen(covariate, covarunit)
+        elif self.partial_derivative_transform:
+            derivcurvegens = [curvegen.get_partial_derivative_curvegen(covariate, covarunit) for curvegen in self.curvegens]
+            return TransformCurveGenerator(self.partial_derivative_transform, "Partial derivative of " + self.description,
+                                           *tuple(derivcurvegens), *tuple(curvegens))
         else:
             raise NotImplementedError("Cannot produce partial derivative for transform %s" % self.description)
-
+    
 class DelayedCurveGenerator(CurveGenerator):
     """
 

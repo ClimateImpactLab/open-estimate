@@ -21,6 +21,8 @@ class UShapedCurve(UnivariateCurve):
         Temperature values for a grid of additional sampled temperatures
     fillyys : array_like
         The dependent variables that correspond to fillxxs
+    direction : string
+        Either boatpose (u-shaped) or downdog (inverse-u-shaped)
     """
     def __init__(self, curve, midtemp, gettas, ordered='maintain', fillxxs=None, fillyys=None, direction='boatpose'):
         super(UShapedCurve, self).__init__(curve.xx)
@@ -118,14 +120,18 @@ class UShapedClipping(UnivariateCurve):
         Returns the core temperature variable from whatever the curve is called with.
     ordered : boolean or 'maintain'
         Must use the same value as the corresponding UShapedCurve
+    direction : string
+        Either boatpose (u-shaped) or downdog (inverse-u-shaped)
     """
-    def __init__(self, curve, tmarginal_curve, midtemp, gettas, ordered='maintain'):
+    def __init__(self, curve, tmarginal_curve, midtemp, gettas, ordered='maintain', direction='boatpose'):
         super(UShapedClipping, self).__init__(curve.xx)
         self.curve = curve
         self.tmarginal_curve = tmarginal_curve
         self.midtemp = midtemp
         self.gettas = gettas
         self.ordered = ordered
+        assert direction in ['boatpose', 'downdog'], "Unknown direction for u-shaped clipping."
+        self.direction = direction
 
     def __call__(self, xs):
         tas = self.gettas(xs)
@@ -150,12 +156,18 @@ class UShapedClipping(UnivariateCurve):
         lowindicesofordered = np.arange(n_below)[::-1]  # [N-1 ... 0]
         if len(lowindicesofordered) > 1:
             lowindicesofordered[np.concatenate(([False], increasingplateaus[:len(lowindicesofordered)-1]))] = n_below
-            lowindicesofordered = np.minimum.accumulate(lowindicesofordered)
-            
+            if self.direction == 'boatpose':
+                lowindicesofordered = np.minimum.accumulate(lowindicesofordered)
+            elif self.direction == 'downdog':
+                lowindicesofordered = np.maximum.accumulate(lowindicesofordered)
+                
         highindicesofordered = np.arange(sum(orderedtas >= self.midtemp)) + n_below  # [N ... T-1]
         if len(highindicesofordered) > 1:
             highindicesofordered[np.concatenate(([False], increasingplateaus[-len(highindicesofordered)+1:]))] = n_below
-            highindicesofordered = np.maximum.accumulate(highindicesofordered)
+            if self.direction == 'boatpose':
+                highindicesofordered = np.maximum.accumulate(highindicesofordered)
+            elif self.direction == 'downdog':
+                highindicesofordered = np.minimum.accumulate(highindicesofordered)
 
         # Construct the results
         if isinstance(xs, xr.Dataset):
