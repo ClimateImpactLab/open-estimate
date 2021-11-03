@@ -157,7 +157,7 @@ class TransformCurveGenerator(CurveGenerator):
         elif self.partial_derivative_transform:
             derivcurvegens = [curvegen.get_partial_derivative_curvegen(covariate, covarunit) for curvegen in self.curvegens]
             return TransformCurveGenerator(self.partial_derivative_transform, "Partial derivative of " + self.description,
-                                           *tuple(derivcurvegens), *tuple(curvegens))
+                                           *tuple(derivcurvegens), *tuple(self.curvegens))
         else:
             raise NotImplementedError("Cannot produce partial derivative for transform %s" % self.description)
     

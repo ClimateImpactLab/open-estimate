@@ -134,7 +134,7 @@ class UShapedClipping(UnivariateCurve):
         self.direction = direction
 
     def __call__(self, xs):
-        tas = self.gettas(xs)
+        tas = np.array(self.gettas(xs))
         order = np.argsort(tas)
         orderedtas = tas[order]
 
