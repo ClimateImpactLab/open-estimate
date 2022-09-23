@@ -6,7 +6,6 @@ from . import latextools
 
 from openest.models.curve import FlatCurve
 
-
 class CurveGenerator(object):
     """Abstract Base Class for curve generators
 
@@ -169,6 +168,7 @@ class DelayedCurveGenerator(CurveGenerator):
         self.curvegen = curvegen
         self.last_curves = {}
         self.last_years = {}
+        self.curve_cache = {}
         
     def get_curve(self, region, year, *args, **kwargs):
         """
@@ -189,7 +189,7 @@ class DelayedCurveGenerator(CurveGenerator):
         openest.generate.SmartCurve-like
         """
         if self.last_years.get(region, None) == year:
-            return self.last_curves[region]
+            return self.last_curves[region] # XXX: Should this self.curve_cache[region]?
         
         if region not in self.last_curves:
             # Calculate no-weather before update covariates by calling with weather
@@ -202,7 +202,13 @@ class DelayedCurveGenerator(CurveGenerator):
 
         self.last_curves[region] = self.get_next_curve(region, year, *args, **kwargs)
         self.last_years[region] = year
+
+        # Save this curve in the cache
+        self.curve_cache[region] = curve
         return curve
+
+    def get_most_recent_curve(self, region):
+        return self.curve_cache[region]
 
     def get_next_curve(self, region, year, *args, **kwargs):
         """
