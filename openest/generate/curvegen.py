@@ -189,7 +189,7 @@ class DelayedCurveGenerator(CurveGenerator):
         openest.generate.SmartCurve-like
         """
         if self.last_years.get(region, None) == year:
-            return self.last_curves[region] # XXX: Should this self.curve_cache[region]?
+            return self.curve_cache[region]
         
         if region not in self.last_curves:
             # Calculate no-weather before update covariates by calling with weather
