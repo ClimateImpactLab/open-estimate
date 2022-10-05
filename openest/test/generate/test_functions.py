@@ -5,7 +5,7 @@ import pytest
 
 from openest.generate.base import Constant
 from openest.generate.daily import YearlyDayBins
-from openest.generate.functions import Scale, Instabase, SpanInstabase, Clip, Sum, Product, FractionSum
+from openest.generate.functions import Scale, Instabase, SpanInstabase, Clip, Sum, Product, FractionSum, SequentialProcess
 from .test_daily import test_curve
 
 
