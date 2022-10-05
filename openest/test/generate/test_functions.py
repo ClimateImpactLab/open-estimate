@@ -405,8 +405,8 @@ class TestSequentialProcess:
     """Tests for openest.generate.functions.SequentialProcess
     """
     def test_doublereport(self):
-        subcalc_step1 = MockAppCalc(years=[0], values=[1.0], unitses['none'])
-        subcalc_step2 = MockAppCalc(years=[0], values=[2.0], unitses['none'])
+        subcalc_step1 = MockAppCalc(years=[0], values=[1.0], unitses=['none'])
+        subcalc_step2 = MockAppCalc(years=[0], values=[2.0], unitses=['none'])
         seqcalc = SequentialProcess(subcalc_step1, subcalc_step2, reportstep1=True)
         for yearresult in seqcalc.apply('a region').push('not a ds'):
             np.testing.assert_equal(yearresult[1], 2.)
