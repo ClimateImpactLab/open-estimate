@@ -410,4 +410,4 @@ class TestSequentialProcess:
         seqcalc = SequentialProcess(subcalc_step1, subcalc_step2, reportstep1=True)
         for yearresult in seqcalc.apply('a region').push('not a ds'):
             np.testing.assert_equal(yearresult[1], 2.)
-            np.testing.assert_equal(yearresult[1], 1.)
+            np.testing.assert_equal(yearresult[2], 1.)
