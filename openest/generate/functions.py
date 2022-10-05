@@ -1150,6 +1150,19 @@ class Reword(calculation.RecursiveCalculation):
                     description="Change the name and/or description of a result.")
 
 class SequentialProcess(calculation.RecursiveCalculation):
+    """
+    Perform two calculations in sequence, generally needed for the side-effects of the first one.
+
+    Attributes
+    ----------
+    step1: Calculation
+        The first calculation to perform.
+    step2: Calculation
+        The second calculation to perform.
+    reportstep1 : boolean
+        Should the outputs of step 1 be tacked on to the end of the results vector?
+    """
+
     def __init__(self, step1, step2, reportstep1=False):
         if reportstep1:
             super().__init__([step2, step1], step2.unitses + step1.unitses)

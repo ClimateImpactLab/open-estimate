@@ -45,7 +45,7 @@ def test_delayedcurvegenerator(mock_curvegen):
     assert dcg.last_years == {'a_region': 1984}
     assert dcg.last_curves == {'a_region': 'foobar'}
 
-    dcg.curve_cache['a_region'] = 'barfoo'
+    dcg.current_curves['a_region'] = 'barfoo'
     victim2 = dcg.get_curve(*args_in, **kwargs_in)
     assert victim2 == 'barfoo'
 
