@@ -35,7 +35,10 @@ class CurveGenerator(object):
         print(self.__class__)
         raise NotImplementedError()
 
+    def extrema_finder(self, mintemp, maxtemp, sign):
+        raise NotImplementedError()
 
+    
 class ConstantCurveGenerator(CurveGenerator):
     def __init__(self, indepunits, depenunit, curve):
         super(ConstantCurveGenerator, self).__init__(indepunits, depenunit)
@@ -156,6 +159,13 @@ class TransformCurveGenerator(CurveGenerator):
         else:
             raise NotImplementedError("Cannot produce partial derivative for transform %s" % self.description)
 
+    def extrema_finder(self, mintemp, maxtemp, sign):
+        # Default extrema_finder assumes transformation is not affected by transformation (very often the case)
+        if len(self.curvegens) > 1:
+            raise NotImplementedError()
+        return self.curvegens[0].extrema_finder(mintemp, maxtemp, sign)
+
+    
 class DelayedCurveGenerator(CurveGenerator):
     """
 
@@ -264,6 +274,10 @@ class DelayedCurveGenerator(CurveGenerator):
         """
         return DelayedCurveGenerator(self.curvegen.get_partial_derivative_curvegen(covariate, covarunit))
 
+    def extrema_finder(self, mintemp, maxtemp, sign):
+        return self.curvegen.extrema_finder(mintemp, maxtemp, sign)
+
+    
 class FunctionCurveGenerator(CurveGenerator):
     def __init__(self, indepunits, depenunits, covargen, curvegenfunc):
         super(FunctionCurveGenerator, self).__init__(indepunits, depenunits)
