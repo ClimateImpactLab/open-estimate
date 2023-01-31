@@ -1148,3 +1148,74 @@ class Reword(calculation.RecursiveCalculation):
                     arguments=[arguments.calculation, arguments.label.rename('name').optional(),
                                arguments.label.rename('title').optional(), arguments.description.optional()],
                     description="Change the name and/or description of a result.")
+
+class SequentialProcess(calculation.RecursiveCalculation):
+    """
+    Perform two calculations in sequence, generally needed for the side-effects of the first one.
+
+    Attributes
+    ----------
+    step1: Calculation
+        The first calculation to perform.
+    step2: Calculation
+        The second calculation to perform.
+    reportstep1 : boolean
+        Should the outputs of step 1 be tacked on to the end of the results vector?
+    """
+
+    def __init__(self, step1, step2, reportstep1=False):
+        if reportstep1:
+            super().__init__([step2, step1], step2.unitses + step1.unitses)
+        else:
+            super().__init__([step2, step1], step2.unitses)
+        self.step1 = step1
+        self.step2 = step2
+        self.reportstep1 = reportstep1
+
+    def format(self, lang, *args, **kwargs):
+        beforeauxlen = len(formatting.format_labels)
+        auxres = self.step1.format(lang, *args, **kwargs)
+        formatting.format_labels = formatting.format_labels[:beforeauxlen] # drop any new ones added
+        return self.step2.format(lang, *args, **kwargs)
+
+    def apply(self, region, *args, **kwargs):
+        app1 = self.step1.apply(region, *args, **kwargs)
+        app2 = self.step2.apply(region, *args, **kwargs)
+        return SequentialProcessApplication(region, app1, app2, self.reportstep1)
+
+    def partial_derivative(self, covariate, covarunit):
+        return SequentialProcess(self.step1.partial_derivative(covariate, covarunit),
+                                 self.step2.partial_derivative(covariate, covarunit))
+
+
+    def column_info(self):
+        if self.reportstep1:
+            return self.step2.column_info() + self.step1.column_info()
+        else:
+            return self.step2.column_info()
+
+    @staticmethod
+    def describe():
+        return dict(input_timerate='any', output_timerate='same',
+                    arguments=[arguments.calculation, arguments.calculation],
+                    description="Perform a first calculation, then return the result of a second.")
+
+class SequentialProcessApplication(calculation.Application):
+    def __init__(self, region, app1, app2, reportapp1):
+        super(SequentialProcessApplication, self).__init__(region)
+        self.app1 = app1
+        self.app2 = app2
+        self.reportapp1 = reportapp1
+        
+    def push(self, ds):
+        for yearresult1 in self.app1.push(ds):
+            for yearresult2 in self.app2.push(ds):
+                pass
+            if self.reportapp1:
+                yield list(yearresult2) + list(yearresult1[1:])
+            else:
+                yield yearresult2
+
+    def done(self):
+        self.app1.done()
+        return self.app2.done()

@@ -6,7 +6,6 @@ from . import latextools
 
 from openest.models.curve import FlatCurve
 
-
 class CurveGenerator(object):
     """Abstract Base Class for curve generators
 
@@ -36,7 +35,10 @@ class CurveGenerator(object):
         print(self.__class__)
         raise NotImplementedError()
 
+    def extrema_finder(self, mintemp, maxtemp, sign):
+        raise NotImplementedError()
 
+    
 class ConstantCurveGenerator(CurveGenerator):
     def __init__(self, indepunits, depenunit, curve):
         super(ConstantCurveGenerator, self).__init__(indepunits, depenunit)
@@ -157,6 +159,13 @@ class TransformCurveGenerator(CurveGenerator):
         else:
             raise NotImplementedError("Cannot produce partial derivative for transform %s" % self.description)
 
+    def extrema_finder(self, mintemp, maxtemp, sign):
+        # Default extrema_finder assumes transformation is not affected by transformation (very often the case)
+        if len(self.curvegens) > 1:
+            raise NotImplementedError()
+        return self.curvegens[0].extrema_finder(mintemp, maxtemp, sign)
+
+    
 class DelayedCurveGenerator(CurveGenerator):
     """
 
@@ -169,6 +178,7 @@ class DelayedCurveGenerator(CurveGenerator):
         self.curvegen = curvegen
         self.last_curves = {}
         self.last_years = {}
+        self.current_curves = {}
         
     def get_curve(self, region, year, *args, **kwargs):
         """
@@ -189,7 +199,7 @@ class DelayedCurveGenerator(CurveGenerator):
         openest.generate.SmartCurve-like
         """
         if self.last_years.get(region, None) == year:
-            return self.last_curves[region]
+            return self.current_curves[region]
         
         if region not in self.last_curves:
             # Calculate no-weather before update covariates by calling with weather
@@ -202,6 +212,9 @@ class DelayedCurveGenerator(CurveGenerator):
 
         self.last_curves[region] = self.get_next_curve(region, year, *args, **kwargs)
         self.last_years[region] = year
+
+        # Save this curve in the cache
+        self.current_curves[region] = curve
         return curve
 
     def get_next_curve(self, region, year, *args, **kwargs):
@@ -261,6 +274,10 @@ class DelayedCurveGenerator(CurveGenerator):
         """
         return DelayedCurveGenerator(self.curvegen.get_partial_derivative_curvegen(covariate, covarunit))
 
+    def extrema_finder(self, mintemp, maxtemp, sign):
+        return self.curvegen.extrema_finder(mintemp, maxtemp, sign)
+
+    
 class FunctionCurveGenerator(CurveGenerator):
     def __init__(self, indepunits, depenunits, covargen, curvegenfunc):
         super(FunctionCurveGenerator, self).__init__(indepunits, depenunits)

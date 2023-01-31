@@ -5,7 +5,7 @@ import pytest
 
 from openest.generate.base import Constant
 from openest.generate.daily import YearlyDayBins
-from openest.generate.functions import Scale, Instabase, SpanInstabase, Clip, Sum, Product, FractionSum
+from openest.generate.functions import Scale, Instabase, SpanInstabase, Clip, Sum, Product, FractionSum, SequentialProcess
 from .test_daily import test_curve
 
 
@@ -400,3 +400,14 @@ class TestClip:
         clipped_calc = Clip(subcalc_mock, 0.0, 1.0)
         victim = clipped_calc.describe()
         assert list(victim.keys()) == ['input_timerate', 'output_timerate', 'arguments', 'description']
+
+class TestSequentialProcess:
+    """Tests for openest.generate.functions.SequentialProcess
+    """
+    def test_doublereport(self):
+        subcalc_step1 = MockAppCalc(years=[0], values=[1.0], unitses=['none'])
+        subcalc_step2 = MockAppCalc(years=[0], values=[2.0], unitses=['none'])
+        seqcalc = SequentialProcess(subcalc_step1, subcalc_step2, reportstep1=True)
+        for yearresult in seqcalc.apply('a region').push('not a ds'):
+            np.testing.assert_equal(yearresult[1], 2.)
+            np.testing.assert_equal(yearresult[2], 1.)
